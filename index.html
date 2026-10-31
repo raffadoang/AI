@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080808">
+<title>RAFFZ AI</title>
+<style>
+:root{--bg:#080808;--panel:#141414;--line:#303030;--text:#f4f4f4;--muted:#aaa;--red:#e01818}
+*{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Arial}
+body{display:flex;justify-content:center;overflow:hidden}.app{width:100%;max-width:720px;height:100dvh;display:flex;flex-direction:column;background:radial-gradient(ellipse at 50% -20%,#351010 0,transparent 55%),var(--bg)}
+header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:11px;background:#0d0d0df2}
+.logo{width:45px;height:45px;object-fit:cover;border-radius:50%;border:1px solid #6e1515}
+.brand{flex:1}.brand strong{display:block;font-size:16px}.brand small,.status{color:var(--muted);font-size:11px}
+.status{color:#ff7777}#logout{background:#222;color:white;border:1px solid #444;border-radius:9px;padding:8px}
+#chat{flex:1;overflow-y:auto;padding:18px 14px 24px}
+.welcome{text-align:center;padding:30px 12px}.welcome img{width:82px;height:82px;object-fit:cover;border-radius:22px;border:1px solid #7d2222}.welcome h1{font-size:23px;margin:14px 0 8px}.welcome p{font-size:13px;color:var(--muted);line-height:1.6}
+.msg{display:flex;margin:13px 0;gap:8px;align-items:flex-end}.msg.user{justify-content:flex-end}.avatar{width:28px;height:28px;flex:0 0 28px;border-radius:50%;object-fit:cover}.bubble{max-width:86%;padding:11px 13px;border-radius:15px;background:#191919;border:1px solid #333;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}.user .bubble{background:#701515;border-color:#a52a2a}.typing{color:#ff8585}
+footer{padding:10px 12px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#0d0d0d}
+.note{text-align:center;color:#888;font-size:10px;margin:0 0 8px}.composer{display:flex;gap:8px;align-items:flex-end;padding:7px;background:#171717;border:1px solid #393939;border-radius:17px}
+textarea,input{font:14px system-ui}textarea{flex:1;resize:none;max-height:120px;min-height:42px;border:0;outline:0;background:transparent;color:white;padding:10px 7px}
+.send{width:43px;height:43px;border:0;border-radius:13px;background:var(--red);color:white;font-size:19px;font-weight:900}
+.actions{display:flex;justify-content:space-between;padding:8px 4px 0}.actions button{background:none;border:0;color:#aaa;font-size:11px;padding:5px}
+#auth{position:fixed;inset:0;z-index:5;background:#080808;display:flex;align-items:center;justify-content:center;padding:20px}
+.authbox{width:100%;max-width:390px;background:#141414;border:1px solid #393939;border-radius:20px;padding:22px;text-align:center}
+.authbox img{width:76px;height:76px;border-radius:20px;object-fit:cover}.authbox h2{margin:12px 0 5px}.authbox p{color:#aaa;font-size:12px}
+.authbox input{display:block;width:100%;margin:10px 0;padding:13px;border-radius:10px;border:1px solid #444;background:#090909;color:white;outline:none}
+.authbox button{width:100%;padding:13px;border:0;border-radius:10px;background:#c81717;color:white;font-weight:700;margin-top:8px}
+.authbox .switch{background:transparent;border:1px solid #444;color:#ddd}.err{color:#ff7777;min-height:18px;font-size:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="auth">
+ <div class="authbox">
+  <img src="logo.jpg" alt="Logo RAFFZ AI"><h2>RAFFZ⚡ AI</h2><p id="authTitle">Login menggunakan email untuk melanjutkan</p>
+  <input id="email" type="email" autocomplete="email" placeholder="Email" required>
+  <input id="password" type="password" autocomplete="current-password" placeholder="Password (min. 6 karakter)" required>
+  <div class="err" id="authError"></div>
+  <button id="loginBtn">LOGIN</button><button class="switch" id="registerBtn">BUAT AKUN BARU</button>
+ </div>
+</div>
+<div class="app">
+<header><img class="logo" src="logo.jpg" alt="Logo"><div class="brand"><strong>RAFFZ⚡ AI</strong><small>Groq AI • Source code assistant</small></div><span class="status" id="status">Menghubungkan…</span><button id="logout">Keluar</button></header>
+<main id="chat"><section class="welcome" id="welcome"><img src="logo.jpg" alt="Logo RAFFZ AI"><h1>Halo, aku RAFFZ AI</h1><p>Tanyakan apa saja atau minta aku membuat source code HTML, CSS, JavaScript, dan lainnya.</p></section></main>
+<footer><p class="note">Login diperlukan • Jawaban AI membutuhkan koneksi internet</p><div class="composer"><textarea id="input" rows="1" placeholder="Tulis pesan untuk RAFFZ AI…"></textarea><button class="send" id="send">➤</button></div><div class="actions"><button id="clear">Hapus percakapan</button><button id="code">Buat source code</button></div></footer>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+/* ISI konfigurasi Firebase dari Project settings > Your apps. Bukan API key Groq. */
+const firebaseConfig = {
+  apiKey: "ISI_FIREBASE_WEB_API_KEY",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  appId: "ISI_FIREBASE_APP_ID"
+};
+/* Ganti dengan URL backend Render setelah deploy, contoh https://raffz-ai-api.onrender.com */
+const API_BASE = "ISI_URL_BACKEND_RENDER";
+const authLayer=document.getElementById('auth'), authError=document.getElementById('authError');
+const emailEl=document.getElementById('email'), passEl=document.getElementById('password');
+let auth=null, registerMode=false, busy=false;
+const chat=document.getElementById('chat'), input=document.getElementById('input');
+function showError(e){authError.textContent=(e&&e.message)||String(e)}
+function addMessage(role,text){document.getElementById('welcome')?.remove();const row=document.createElement('div');row.className='msg '+role;if(role==='bot'){const av=document.createElement('img');av.className='avatar';av.src='logo.jpg';row.append(av)}const b=document.createElement('div');b.className='bubble';b.textContent=text;row.append(b);chat.append(row);chat.scrollTop=chat.scrollHeight}
+function setBusy(v){busy=v;document.getElementById('send').disabled=v;document.getElementById('status').textContent=v?'Menjawab…':'Online'}
+async function login(){showError('');try{if(!auth)throw Error('Konfigurasi Firebase belum diisi.');const e=emailEl.value.trim(),p=passEl.value;if(!e||!p)throw Error('Isi email dan password.');if(registerMode)await auth.createUserWithEmailAndPassword(e,p);else await auth.signInWithEmailAndPassword(e,p)}catch(e){showError(e.message)}}
+document.getElementById('loginBtn').onclick=()=>{registerMode=false;login()};
+document.getElementById('registerBtn').onclick=()=>{registerMode=true;login()};
+document.getElementById('logout').onclick=()=>auth&&auth.signOut();
+if(firebaseConfig.apiKey.startsWith('ISI_')){showError('Admin perlu mengisi konfigurasi Firebase di index.html.');document.getElementById('status').textContent='Setup diperlukan'}
+else{firebase.initializeApp(firebaseConfig);auth=firebase.auth();auth.onAuthStateChanged(user=>{authLayer.hidden=!!user;document.getElementById('logout').hidden=!user;document.getElementById('status').textContent=user?'Online':'Login diperlukan'})}
+async function sendMessage(textOverride){const text=(textOverride??input.value).trim();if(!text||busy)return;if(!auth||!auth.currentUser){authLayer.hidden=false;return}input.value='';addMessage('user',text);setBusy(true);const loading=document.createElement('div');loading.className='msg bot';loading.innerHTML='<div class="bubble typing">RAFFZ AI sedang berpikir…</div>';chat.append(loading);chat.scrollTop=chat.scrollHeight;
+try{if(API_BASE.startsWith('ISI_'))throw Error('URL backend Render belum diisi.');const token=await auth.currentUser.getIdToken();const r=await fetch(API_BASE.replace(/\/$/,'')+'/api/chat',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({message:text})});const data=await r.json();if(!r.ok)throw Error(data.error||'Permintaan gagal');loading.remove();addMessage('bot',data.reply)}catch(e){loading.remove();addMessage('bot','Gagal menghubungi AI: '+e.message)}finally{setBusy(false)}}
+document.getElementById('send').onclick=()=>sendMessage();
+input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}});
+input.addEventListener('input',()=>{input.style.height='auto';input.style.height=Math.min(input.scrollHeight,120)+'px'});
+document.getElementById('clear').onclick=()=>{if(confirm('Hapus percakapan di layar?'))chat.innerHTML=''};
+document.getElementById('code').onclick=()=>{input.value='Buatkan source code lengkap untuk: ';input.focus()};
+</script>
+</body></html>
